@@ -13,6 +13,7 @@ from for_students.competitive_alternating import STEPS_PER_DAY
 from for_students.diagnostics import print_experiment_report
 from for_students.internal.submission_worker import IsolatedSubmittedPolicy
 from for_students.run_competitive_alternating import (
+    DEFAULT_RANDOM_SEED,
     PRETRAINED_COMPETITOR_ISO_MODEL_PATH,
     PRETRAINED_PCS_MODEL_PATH,
     create_competitive_iso_environment,
@@ -92,8 +93,7 @@ def evaluate_submission(submission_path):
 
         with IsolatedSubmittedPolicy(
             submission_path,
-            market_environment.observation_space,
-            market_environment.action_space,
+            seed=DEFAULT_RANDOM_SEED,
         ) as submitted_policy:
             results = evaluate_iso_policy(
                 submitted_policy,
@@ -101,6 +101,9 @@ def evaluate_submission(submission_path):
                 competitor_iso_model,
                 cleaned_test_data,
                 test_predictions,
+            )
+            results["training_budget"] = (
+                submitted_policy.training_budget
             )
 
     checks = {
@@ -118,7 +121,7 @@ def main():
     parser.add_argument(
         "submission",
         type=Path,
-        help="Path to submission.py containing create_policy().",
+        help="Path to submission.py containing create_model().",
     )
     arguments = parser.parse_args()
 

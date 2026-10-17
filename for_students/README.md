@@ -27,8 +27,8 @@ offering the higher payment. It may shift energy through its battery, but it
 cannot buy and immediately resell energy in the same half-hour.
 
 Dispatch always costs money. Demand above dispatch requires more expensive
-emergency energy. The PCS only bothers (or code-wise, is allowed) to sell excess energy only when an ISO offers at least
-`0.06` per unit; the ISO may resell it externally for `0.12`, leaving at most
+emergency energy. The PCS only sells excess energy when an ISO offers at least
+`0.06` per unit. The ISO may resell it externally for `0.12`, leaving at most
 `0.06` profit per exported unit.
 
 All three participants learn during training:
@@ -72,17 +72,7 @@ The `internal/` folder contains accounting, preprocessing, parameters,
 checkpoint loading, and evaluation plumbing that students do not need to study.
 The core `energy_net/` package is not modified.
 
-### Rebuild the reusable models
-
-Only required when the environment, reward, observations, or checkpoints
-change:
-
-```powershell
-python -m for_students.training.train_pcs
-python -m for_students.training.train_competitor_iso
-```
-
-### Run the five-minute experiment
+### Run the provided experiment
 
 ```powershell
 python -m for_students.run_competitive_alternating
@@ -92,33 +82,56 @@ The competitor is a demanding reference point with substantially more prior
 training. You do not need to outperform it: success means that your own ISO
 earns positive held-out profit.
 
-### Submit a policy
+### Create your submission
 
-Copy `for_students/grading/submission_template.py` and implement:
-
-```python
-def create_policy(observation_space, action_space):
-    return policy_with_a_predict_method
-```
-
-The returned object must implement:
+Your submission is one Python source file. Start by copying
+`for_students/grading/submission_template.py` and implement:
 
 ```python
-action, state = policy.predict(observation, deterministic=True)
+def create_model(training_environment, seed):
+    return newly_initialized_model
 ```
 
-Actions must have the exact ISO action shape, contain only finite values, and
-remain within `[0, 1]`.
+The returned model must implement methods compatible with the trusted
+alternating trainer:
 
-Evaluate a submission with:
+```python
+model.set_env(environment, force_reset=True)
+model.learn(total_timesteps, reset_num_timesteps=False, callback=callback)
+action, state = model.predict(observation, deterministic=True)
+```
+
+The file may contain the complete model architecture, algorithm, helper
+classes, and hyperparameters. The model must begin from fresh initialization:
+do not load checkpoints, serialized weights, companion model files, or
+pretrained policies.
+
+Your file will be reviewed before it is run. Submissions must not:
+
+- load or embed pretrained weights;
+- read held-out data or files outside the approved training inputs;
+- access the network or launch subprocesses;
+- monkeypatch EnergyNet, accounting, rewards, clocks, or evaluator code; or
+- continue learning during held-out evaluation.
+
+### Evaluate your submission
+
+Run:
 
 ```powershell
 python -m for_students.grading.evaluate_submission path\to\submission.py
 ```
 
-The evaluator loads fresh PCS and competitor checkpoints, runs the later
-chronological test period once, prints the financial and energy diagnostics,
-and passes the submission only when total held-out ISO profit is positive.
+The evaluator imports your file in a separate process and constructs a fresh
+model. Your ISO then trains in the same alternating market as the provided
+experiment. The PCS and competitor begin from their reusable checkpoints, but
+your ISO always begins from new weights.
 
-For real grading, the final test data must be stored outside the student
-checkout; this local evaluator cannot hide repository files from hostile code.
+Training stops after the fixed CPU budget. The resulting policy is frozen and
+evaluated once on later chronological data, without additional learning.
+Actions must have the exact ISO action shape, contain only finite values, and
+remain within `[0, 1]`.
+
+The evaluator reports the CPU and wall time, financial outcomes, energy
+behavior, and final pass or fail result. The official evaluation may use
+held-out data that is not included in the student checkout.

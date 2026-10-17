@@ -404,37 +404,27 @@ def evaluate_iso_policy(
     }
 
 
-def run_experiment(
+def train_main_iso_policy(
     training_seconds=DEFAULT_TRAINING_SECONDS,
     seed=DEFAULT_RANDOM_SEED,
     main_algorithm="SAC",
     generation_cost=DEFAULT_GENERATION_COST,
     wall_safety_seconds=DEFAULT_WALL_SAFETY_SECONDS,
+    main_model_factory=None,
 ):
+    """Train one fresh main-ISO policy within the shared CPU-time budget."""
+
     torch.set_num_threads(1)
     root = Path(__file__).resolve().parents[2]
     data = root / "tests" / "gym" / "data_for_tests"
     train_actual = data / "synthetic_household_consumption_train.csv"
-    test_actual = data / "synthetic_household_consumption_test.csv"
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Cleaned data and predictions are generated separately for each
-        # chronological partition, so later test readings never affect train.
         cleaned_train_actual = Path(temp_dir) / "cleaned_train_actual.csv"
-        cleaned_test_actual = Path(temp_dir) / "cleaned_test_actual.csv"
         train_predictions = Path(temp_dir) / "train_predictions.csv"
-        test_predictions = Path(temp_dir) / "test_predictions.csv"
-        training_consumption = (
-            write_clean_consumption_and_previous_day_predictions(
-                train_actual,
-                cleaned_train_actual,
-                train_predictions,
-            )
-        )
         write_clean_consumption_and_previous_day_predictions(
-            test_actual,
-            cleaned_test_actual,
-            test_predictions,
-            previous_day=training_consumption[-STEPS_PER_DAY:],
+            train_actual,
+            cleaned_train_actual,
+            train_predictions,
         )
 
         training_pcs_environment = create_recording_pcs_environment(
@@ -468,11 +458,23 @@ def run_experiment(
             pcs_model,
             generation_cost=generation_cost,
         )
-        main_iso_model = create_main_iso_model(
-            main_algorithm,
-            training_iso_environment,
-            seed,
-        )
+        if main_model_factory is None:
+            main_iso_model = create_main_iso_model(
+                main_algorithm,
+                training_iso_environment,
+                seed,
+            )
+        else:
+            main_iso_model = main_model_factory(
+                training_iso_environment,
+                seed,
+            )
+        for required_method in ("set_env", "learn", "predict"):
+            if not callable(getattr(main_iso_model, required_method, None)):
+                raise ValueError(
+                    "create_model() must return a fresh model implementing "
+                    f"{required_method}()."
+                )
         if not PRETRAINED_COMPETITOR_ISO_MODEL_PATH.exists():
             raise FileNotFoundError(
                 "The reusable competitor ISO has not been trained. Run "
@@ -583,6 +585,52 @@ def run_experiment(
             )
 
         training_budget.raise_if_wall_exhausted()
+        return main_iso_model, {
+            "cpu_seconds": training_budget.used_cpu_seconds,
+            "wall_seconds": training_budget.used_wall_seconds,
+        }
+
+
+def run_experiment(
+    training_seconds=DEFAULT_TRAINING_SECONDS,
+    seed=DEFAULT_RANDOM_SEED,
+    main_algorithm="SAC",
+    generation_cost=DEFAULT_GENERATION_COST,
+    wall_safety_seconds=DEFAULT_WALL_SAFETY_SECONDS,
+    main_model_factory=None,
+):
+    """Train a fresh main ISO and evaluate it once on later data."""
+
+    main_iso_model, training_budget = train_main_iso_policy(
+        training_seconds=training_seconds,
+        seed=seed,
+        main_algorithm=main_algorithm,
+        generation_cost=generation_cost,
+        wall_safety_seconds=wall_safety_seconds,
+        main_model_factory=main_model_factory,
+    )
+    root = Path(__file__).resolve().parents[2]
+    data = root / "tests" / "gym" / "data_for_tests"
+    train_actual = data / "synthetic_household_consumption_train.csv"
+    test_actual = data / "synthetic_household_consumption_test.csv"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        cleaned_train_actual = Path(temp_dir) / "cleaned_train_actual.csv"
+        cleaned_test_actual = Path(temp_dir) / "cleaned_test_actual.csv"
+        train_predictions = Path(temp_dir) / "train_predictions.csv"
+        test_predictions = Path(temp_dir) / "test_predictions.csv"
+        training_consumption = (
+            write_clean_consumption_and_previous_day_predictions(
+                train_actual,
+                cleaned_train_actual,
+                train_predictions,
+            )
+        )
+        write_clean_consumption_and_previous_day_predictions(
+            test_actual,
+            cleaned_test_actual,
+            test_predictions,
+            previous_day=training_consumption[-STEPS_PER_DAY:],
+        )
         evaluation_pcs_model = SAC.load(
             str(PRETRAINED_PCS_MODEL_PATH),
         )
@@ -597,8 +645,5 @@ def run_experiment(
             test_predictions,
             generation_cost=generation_cost,
         )
-        results["training_budget"] = {
-            "cpu_seconds": training_budget.used_cpu_seconds,
-            "wall_seconds": training_budget.used_wall_seconds,
-        }
+        results["training_budget"] = training_budget
         return results
