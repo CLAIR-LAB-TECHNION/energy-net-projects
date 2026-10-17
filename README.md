@@ -146,6 +146,8 @@ For detailed tutorials, examples, and advanced usage, see:
 
 📈 **[Prediction Tutorial](Prediction_Tutorial.ipynb)** - Target-neutral forecasting for explicitly selected demand, generation, or other energy series.
 
+⚡ **[Competitive Energy Market RL Exercise](for_students/README.md)** - Student-facing theory, implementation guide, training commands, and grading contract for the competitive pricing, dispatch, battery, and profit experiment.
+
 Run the standalone prediction example from the repository root:
 
 ```bash
@@ -158,6 +160,15 @@ python tests/unittests/energy_prediction_demonstration.py
 
 ```
 energy-net/
+├── for_students/                  # Competitive multi-agent RL exercise
+│   ├── README.md                  # Problem theory and code instructions
+│   ├── competitive_alternating.py
+│   ├── run_competitive_alternating.py
+│   ├── diagnostics/
+│   ├── grading/
+│   ├── internal/                  # Non-student implementation plumbing
+│   ├── models/
+│   └── training/
 ├── prediction/                    # Target-neutral energy forecasting
 │   └── energy_predictor.py        # Primary prediction API
 ├── energy_net/                    # Core package
