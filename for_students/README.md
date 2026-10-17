@@ -7,8 +7,8 @@
 > interactive explanations, extensive refactoring, and other classroom aids
 > were deliberately left out. The code is more complicated and less readable
 > than ideal; part of the exercise is seeing whether students can understand,
-> use, and improve an imperfect EnergyNet-based system, which is something you will have to deal with during your project while working with human or AI partners. 
-> This is not a homework - the only requirement is that you submit a passing result, and while the person with the best result might receive a prize, the primary purpose is simply to check that you are ready to tackle a real project in the lab. 
+> use, and improve an imperfect EnergyNet-based system, which is something you will have to deal with during your project while working with human or AI partners.
+> This is not a homework - the only requirement is that you submit a passing result, and while the person with the best result might receive a prize, the primary purpose is simply to check that you are ready to tackle a real project in the lab.
 
 ## Part I — The problem
 
