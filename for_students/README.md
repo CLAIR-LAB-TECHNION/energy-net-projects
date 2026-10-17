@@ -108,11 +108,10 @@ pretrained policies.
 
 Your file will be reviewed before it is run. Submissions must not:
 
-- start from a model that was trained before the evaluator began. You may
-  choose the model architecture and hyperparameters, but you may not call
-  functions such as `SAC.load()`, `PPO.load()`, `torch.load()`, or
-  `load_state_dict()`, include a saved model, or paste previously learned
-  parameter values into the source file;
+- submit a model that has already learned. `create_model()` must construct a
+  brand-new model with randomly initialized parameters. It must not read a
+  saved model from disk, copy learned parameters from another model, or
+  contain parameters learned during an earlier run;
 - read held-out data or files outside the approved training inputs;
 - access the network or launch subprocesses;
 - monkeypatch EnergyNet, accounting, rewards, clocks, or evaluator code; or
@@ -137,5 +136,7 @@ Actions must have the exact ISO action shape, contain only finite values, and
 remain within `[0, 1]`.
 
 The evaluator reports the CPU and wall time, financial outcomes, energy
-behavior, and final pass or fail result. The official evaluation may use
-held-out data that is not included in the student checkout.
+behavior, and final pass or fail result. The included data lets you test your
+approach locally. Your final submission may also be tested on different
+household days that you have not seen, so your strategy should generalize
+rather than memorize the provided test period.
