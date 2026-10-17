@@ -108,7 +108,11 @@ pretrained policies.
 
 Your file will be reviewed before it is run. Submissions must not:
 
-- load or embed pretrained weights;
+- start from a model that was trained before the evaluator began. You may
+  choose the model architecture and hyperparameters, but you may not call
+  functions such as `SAC.load()`, `PPO.load()`, `torch.load()`, or
+  `load_state_dict()`, include a saved model, or paste previously learned
+  parameter values into the source file;
 - read held-out data or files outside the approved training inputs;
 - access the network or launch subprocesses;
 - monkeypatch EnergyNet, accounting, rewards, clocks, or evaluator code; or
