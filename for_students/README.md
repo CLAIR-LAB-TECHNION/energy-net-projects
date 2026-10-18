@@ -55,8 +55,8 @@ current environment step and reports the exact CPU and wall time used.
 strictly greater than zero. Other reported metrics explain the result but do
 not affect pass/fail.
 
-> 🏠 **A small data-history note:** the household readings came from a London
-> electricity dataset that Michael imported, normalized to smaller values, and no longer remembers the exact source of 🙂
+> 🏠 **A small data-history note:** the household readings came from a London household
+> electricity use dataset that Michael imported, normalized to smaller values, and no longer remembers the exact source of 🙂
 > Similar smart-meter household datasets are widely available online, so the
 > experiment can later be repeated with a clearly documented public source.
 
