@@ -110,8 +110,7 @@ Your file will be reviewed before it is run. Submissions must not:
 
 - submit a model that has already learned. `create_model()` must construct a
   brand-new model with randomly initialized parameters. It must not read a
-  saved model from disk, copy learned parameters from another model, or
-  contain parameters learned during an earlier run;
+  saved model from disk or copy learned parameters from another model;
 - read held-out data or files outside the approved training inputs;
 - access the network or launch subprocesses;
 - monkeypatch EnergyNet, accounting, rewards, clocks, or evaluator code; or
