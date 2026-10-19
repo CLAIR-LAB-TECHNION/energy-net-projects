@@ -1,9 +1,9 @@
 # Competitive Energy Market RL Exercise
 
-> **Prototype and AI disclosure**
+> **AI disclosure**
 >
 > This exercise was designed and implemented largely with AI assistance. It is
-> an experimental prototype, not polished teaching material. Visualizations,
+> not polished teaching material. Visualizations,
 > interactive explanations, extensive refactoring, and other classroom aids
 > were deliberately left out. The code is more complicated and less readable
 > than ideal; part of the exercise is seeing whether students can understand,
